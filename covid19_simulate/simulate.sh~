@@ -1,0 +1,16 @@
+#!/sh/bash
+
+day=1
+
+g++ covid19_simulate.cc -std=c++11 -o covid19_simulate
+./covid19_simulate $day
+
+rm ./png/*.png
+rm ./output/*.dat
+
+
+python3 plot.py $day
+cd png
+convert step*png simulate.gif
+cd ..
+
