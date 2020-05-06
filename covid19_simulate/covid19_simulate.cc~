@@ -30,15 +30,15 @@ class human{
   double get_day(){return day_after_infection;}
   void Move(){
     double x,y;
-    if(stop_flag!=true&&die_flag!=true && day_after_infection<14){
-      x=now_locate_x+10*cos(theta);
-      y=now_locate_y+10*sin(theta);
+    if(stop_flag!=true&&die_flag!=true){
+      x=now_locate_x+100*cos(theta);
+      y=now_locate_y+100*sin(theta);
       if(x>XRANGE || y>YRANGE || x<0 || y<0){
 	theta+=M_PI/2.;
       }
       else{
-	now_locate_x+=10*cos(theta);
-	now_locate_y+=10*sin(theta); 
+	now_locate_x+=100*cos(theta);
+	now_locate_y+=100*sin(theta); 
       }
     }
   }
@@ -62,7 +62,7 @@ class human{
     day_after_infection=0.0;
   }
   void Infection_day_count(){
-    day_after_infection+=15.0/24.0/60.0;
+    day_after_infection+=1;
   }
 };
 
@@ -73,7 +73,7 @@ human::human()
   home_y=y*rand()/RAND_MAX;
   now_locate_x=home_x;
   now_locate_y=home_y;
-  //cout<<rand()%360/180.-1<<endl;
+ 
   theta=(rand()%360/180.-1)*2*M_PI;
   if(rand()%100<0) stop_flag=true;
   else stop_flag=false;
@@ -106,14 +106,13 @@ people::people(){
 }
 
 void people::simulate_life_day(int day){
-  double day_time=day*24*60;
+  double day_time=day*24*60/15.;
   int infection=0,die=0,recover=0;
   for(int step=0;step<day_time;step++){
     for(int i=0;i<POPULATION;i++){
       tokyo_human[i].Move();
-      if(tokyo_human[i].get_covid_flag()&&step%(24*60)==0) tokyo_human[i].Infection_day_count();
-      //if(tokyo_human[i].get_day()>14){
-      if(tokyo_human[i].get_day()>14){
+      if(tokyo_human[i].get_covid_flag()) tokyo_human[i].Infection_day_count();
+      if(tokyo_human[i].get_day()>50&&(tokyo_human[i].get_die_flag()!=true||tokyo_human[i].get_recover_flag()!=true)){
 	if(rand()%100<10) tokyo_human[i].Die();
 	else tokyo_human[i].Recovery();
       }
@@ -139,11 +138,13 @@ void people::simulate_life_day(int day){
 void people::touch_check(){
   double distanse;
   for(int i=0;i<POPULATION;i++){
-    for(int j=0;j<POPULATION;j++){
-      distanse=sqrt(pow(tokyo_human[i].get_now_x()-tokyo_human[j].get_now_x(),2)+pow(tokyo_human[i].get_now_y()-tokyo_human[j].get_now_y(),2));
-      if(i!=j&&distanse<100&&tokyo_human[j].get_covid_flag())touch_flag[i]++;
+    if(tokyo_human[i].get_recover_flag()==false && tokyo_human[i].get_die_flag()==false){
+      for(int j=0;j<POPULATION;j++){
+	distanse=sqrt(pow(tokyo_human[i].get_now_x()-tokyo_human[j].get_now_x(),2)+pow(tokyo_human[i].get_now_y()-tokyo_human[j].get_now_y(),2));
+	if(i!=j&&distanse<100&&tokyo_human[j].get_covid_flag())touch_flag[i]++;
+      }
+      if(touch_flag[i]>15) tokyo_human[i].Infection();
     }
-    if(touch_flag[i]>15) tokyo_human[i].Infection();
   }
 }
 
@@ -153,13 +154,15 @@ void people::file_output(int step){
   ofstream ofs2("./output/Recovery"+to_string(step)+".dat");
 
   for(int i=0;i<POPULATION;i++){
-    if(tokyo_human[i].get_covid_flag()==false)
-      if(tokyo_human[i].get_recover_flag==false)
+    if(tokyo_human[i].get_covid_flag()==false){
+      if(tokyo_human[i].get_recover_flag()==false)
 	ofs0<<tokyo_human[i].get_now_x()<<" "<<tokyo_human[i].get_now_y()<<endl;
       else
 	ofs2<<tokyo_human[i].get_now_x()<<" "<<tokyo_human[i].get_now_y()<<endl;
-    else 
+    }
+    else
       ofs1<<tokyo_human[i].get_now_x()<<" "<<tokyo_human[i].get_now_y()<<endl;
+     
   }
 
 }

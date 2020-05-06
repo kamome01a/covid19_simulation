@@ -4,7 +4,7 @@
 #include<ctime>
 #include<cmath>
 
-#define POPULATION 365
+#define POPULATION 1589
 #define XRANGE 50000
 #define YRANGE 50000
 
@@ -14,7 +14,7 @@ class human{
  private:
   double home_x,home_y;
   double now_locate_x,now_locate_y;
-  double day_after_infection=0.0;
+  double time_after_infection=0.0;
   bool covid_flag=false;
   bool die_flag=false;
   bool recover_flag=false;
@@ -27,7 +27,7 @@ class human{
   bool get_covid_flag(){return covid_flag;}
   bool get_die_flag(){return die_flag;}
   bool get_recover_flag(){return recover_flag;}
-  double get_day(){return day_after_infection;}
+  double get_day(){return time_after_infection;}
   void Move(){
     double x,y;
     if(stop_flag!=true&&die_flag!=true){
@@ -48,7 +48,7 @@ class human{
     
   }
   void Infection(){ 
-    const double infection_probability=20;   
+    const double infection_probability=100;   
     if(rand()%100<infection_probability) covid_flag=true;
   }
   void Die(){
@@ -59,10 +59,10 @@ class human{
   void Recovery(){
     covid_flag=false;
     recover_flag=true;
-    day_after_infection=0.0;
+    time_after_infection=0.0;
   }
-  void Infection_day_count(){
-    day_after_infection+=1;
+  void Infection_time_count(){
+    time_after_infection+=1;
   }
 };
 
@@ -75,7 +75,7 @@ human::human()
   now_locate_y=home_y;
  
   theta=(rand()%360/180.-1)*2*M_PI;
-  if(rand()%100<0) stop_flag=true;
+  if(rand()%100<80) stop_flag=true;
   else stop_flag=false;
   if(rand()%100<1) covid_flag=true;
   else covid_flag=false;
@@ -84,9 +84,6 @@ human::human()
 class people{
  private:
   human tokyo_human[POPULATION];
-  double infection_rate;
-  double die_rate;
-  double recover_rate;
   int touch_flag[POPULATION];
  public:
   people();
@@ -96,40 +93,36 @@ class people{
 };
 
 people::people(){
-  int infection=0,die=0;
   for(int i=0;i<POPULATION;i++){
-    if(tokyo_human[i].get_covid_flag()) infection++;
-    if(tokyo_human[i].get_die_flag()) die++;
+    touch_flag[i]=0;
   }
-  infection_rate=double(infection)/POPULATION;
-  die_rate=double(die)/POPULATION;
 }
 
 void people::simulate_life_day(int day){
   double day_time=day*24*60/15.;
-  int infection=0,die=0,recover=0;
+  int infection=0,die=0,recover=0,helth=0;
+  ofstream ofs("rate.dat");
   for(int step=0;step<day_time;step++){
     for(int i=0;i<POPULATION;i++){
       tokyo_human[i].Move();
-      if(tokyo_human[i].get_covid_flag()) tokyo_human[i].Infection_day_count();
-      if(tokyo_human[i].get_day()>50&&(tokyo_human[i].get_die_flag()!=true||tokyo_human[i].get_recover_flag()!=true)){
+      if(tokyo_human[i].get_covid_flag()) tokyo_human[i].Infection_time_count();
+      if(tokyo_human[i].get_day()>50+rand()%25&&(tokyo_human[i].get_die_flag()!=true||tokyo_human[i].get_recover_flag()!=true)){
 	if(rand()%100<10) tokyo_human[i].Die();
 	else tokyo_human[i].Recovery();
       }
     }
-
+    
     infection=0;
     die=0;
     recover=0;
+    helth=0;
     for(int i=0;i<POPULATION;i++){
       if(tokyo_human[i].get_covid_flag()) infection++;
-      if(tokyo_human[i].get_die_flag()) die++;
-      if(tokyo_human[i].get_recover_flag()) recover++;
+      else if(tokyo_human[i].get_die_flag()) die++;
+      else if(tokyo_human[i].get_recover_flag()) recover++;
+      else helth++;
     }
-    infection_rate=double(infection)/POPULATION;
-    die_rate=double(die)/POPULATION;
-    recover_rate=double(recover)/POPULATION;
-    cout<<step<<" "<<infection_rate<<" "<<die_rate<<" "<<recover_rate<<endl;
+    ofs<<step<<" "<<infection<<" "<<infection+helth<<" "<<infection+helth+recover<<" "<<infection+helth+recover+die<<endl;
     file_output(step);
     touch_check();
   }
@@ -141,9 +134,9 @@ void people::touch_check(){
     if(tokyo_human[i].get_recover_flag()==false && tokyo_human[i].get_die_flag()==false){
       for(int j=0;j<POPULATION;j++){
 	distanse=sqrt(pow(tokyo_human[i].get_now_x()-tokyo_human[j].get_now_x(),2)+pow(tokyo_human[i].get_now_y()-tokyo_human[j].get_now_y(),2));
-	if(i!=j&&distanse<100&&tokyo_human[j].get_covid_flag())touch_flag[i]++;
+	if(i!=j&&distanse<1000&&tokyo_human[j].get_covid_flag())touch_flag[i]++;
       }
-      if(touch_flag[i]>15) tokyo_human[i].Infection();
+      if(touch_flag[i]>0) tokyo_human[i].Infection();
     }
   }
 }
@@ -162,9 +155,7 @@ void people::file_output(int step){
     }
     else
       ofs1<<tokyo_human[i].get_now_x()<<" "<<tokyo_human[i].get_now_y()<<endl;
-     
   }
-
 }
 
 int main(int argc,char *argv[])

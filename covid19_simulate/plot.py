@@ -19,4 +19,22 @@ for i in range(int(int(args[1])*24*60/15.)):
     plt.scatter(x_recover,y_recover,color="blue",label="recovery")
     plt.savefig("./png/step%08.f.png"%(i))
 
-    
+step=np.loadtxt("rate.dat",delimiter=' ',usecols=0,dtype="int")
+infection=np.loadtxt("rate.dat",delimiter=' ',usecols=1)
+helth=np.loadtxt("rate.dat",delimiter=' ',usecols=2)
+recover=np.loadtxt("rate.dat",delimiter=' ',usecols=3)
+die=np.loadtxt("rate.dat",delimiter=' ',usecols=4)
+zero=np.zeros(np.max(step)-1)
+
+plt.figure()
+plt.plot(step,helth,color="green")
+plt.plot(step,infection,color="red")
+plt.plot(step,recover,color="blue")
+plt.plot(step,die,color="black")
+
+plt.fill_between(step,infection,color="red",alpha=0.5)
+plt.fill_between(step,infection,helth,where=helth>infection,color="green",alpha=0.5)
+plt.fill_between(step,helth,recover,where=recover>helth,color="blue",alpha=0.5)
+plt.fill_between(step,recover,die,where=die>recover,color="black",alpha=0.5)
+
+plt.savefig("rate_stop.png")
