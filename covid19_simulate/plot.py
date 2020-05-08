@@ -37,4 +37,4 @@ plt.fill_between(step,infection,helth,where=helth>infection,color="green",alpha=
 plt.fill_between(step,helth,recover,where=recover>helth,color="blue",alpha=0.5)
 plt.fill_between(step,recover,die,where=die>recover,color="black",alpha=0.5)
 
-plt.savefig("rate_stop.png")
+plt.savefig("rate_stop_release_step_by_step.png")

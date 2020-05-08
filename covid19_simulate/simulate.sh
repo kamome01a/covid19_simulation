@@ -1,6 +1,6 @@
 #!/sh/bash
 
-day=1
+day=5
 
 
 rm ./png/*.png

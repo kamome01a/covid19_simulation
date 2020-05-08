@@ -28,6 +28,8 @@ class human{
   bool get_die_flag(){return die_flag;}
   bool get_recover_flag(){return recover_flag;}
   double get_day(){return time_after_infection;}
+  void stop_on(){stop_flag=true;}
+  void stop_off(){stop_flag=false;}
   void Move(){
     double x,y;
     if(stop_flag!=true&&die_flag!=true){
@@ -90,6 +92,7 @@ class people{
   void simulate_life_day(int day);
   void touch_check();
   void file_output(int step);
+  void release(int ratio);
 };
 
 people::people(){
@@ -101,6 +104,8 @@ people::people(){
 void people::simulate_life_day(int day){
   double day_time=day*24*60/15.;
   int infection=0,die=0,recover=0,helth=0;
+  int ratio=10;
+  int count=0;
   ofstream ofs("rate.dat");
   for(int step=0;step<day_time;step++){
     for(int i=0;i<POPULATION;i++){
@@ -125,6 +130,14 @@ void people::simulate_life_day(int day){
     ofs<<step<<" "<<infection<<" "<<infection+helth<<" "<<infection+helth+recover<<" "<<infection+helth+recover+die<<endl;
     file_output(step);
     touch_check();
+    
+    if(infection<30&&recover>10&&count>10){
+      release(ratio);
+      ratio+=10;
+      count=0;
+    }
+    count++;
+    //if(infection<30&&recover>10) release(100);
   }
 }
 
@@ -156,6 +169,12 @@ void people::file_output(int step){
     else
       ofs1<<tokyo_human[i].get_now_x()<<" "<<tokyo_human[i].get_now_y()<<endl;
   }
+}
+
+void people::release(int ratio){
+  for(int i=0;i<POPULATION;i++){
+    if(rand()%100<ratio) tokyo_human[i].stop_off();
+  } 
 }
 
 int main(int argc,char *argv[])
